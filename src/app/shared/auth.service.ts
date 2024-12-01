@@ -9,9 +9,13 @@ export class AuthService {
   constructor(private fireauth: AngularFireAuth, private router: Router) {}
   login(email: string, password: string) {
     this.fireauth.signInWithEmailAndPassword(email, password).then(
-      () => {
-        localStorage.setItem('token', 'true');
-        this.router.navigate(['/dashboard']);
+      (res) => {
+        if (res.user?.emailVerified) {
+          localStorage.setItem('token', 'true');
+          this.router.navigate(['/dashboard']);
+        } else {
+          this.router.navigate(['/verify-email']);
+        }
       },
       (err) => {
         localStorage.removeItem('token');
@@ -23,9 +27,16 @@ export class AuthService {
 
   register(email: string, password: string) {
     this.fireauth.createUserWithEmailAndPassword(email, password).then(
-      () => {
+      (res) => {
         alert('Successfully Registered!');
-        this.router.navigate(['/login']);
+        res.user?.sendEmailVerification().then(
+          () => {
+            this.router.navigate(['/verify-email']);
+          },
+          (err) => {
+            alert('Unable to send verification mail to the user.');
+          }
+        );
       },
       (err) => {
         alert(err.message);
@@ -33,12 +44,21 @@ export class AuthService {
       }
     );
   }
-
+  forgotPassword(email: string) {
+    this.fireauth.sendPasswordResetEmail(email).then(
+      () => {
+        this.router.navigate(['/verify-email']);
+      },
+      (err) => {
+        alert('Something went wrong! Try again later!');
+      }
+    );
+  }
   logout() {
     this.fireauth.signOut().then(
       () => {
-        localStorage.removeItem('token');
         this.router.navigate(['/login']);
+        localStorage.removeItem('token');
       },
       (err) => {
         alert(err.message);
