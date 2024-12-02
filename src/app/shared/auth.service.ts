@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { AngularFireAuth } from '@angular/fire/compat/auth';
 import { Router } from '@angular/router';
-
+import { GoogleAuthProvider } from '@angular/fire/auth';
 @Injectable({
   providedIn: 'root',
 })
@@ -24,7 +24,18 @@ export class AuthService {
       }
     );
   }
-
+  signInWithGoogle() {
+    this.fireauth.signInWithPopup(new GoogleAuthProvider()).then(
+      (res: any) => {
+        console.log(res);
+        this.router.navigate(['/dashboard']);
+        localStorage.setItem('token', res.credential?.accessToken);
+      },
+      (err) => {
+        console.log(err);
+      }
+    );
+  }
   register(email: string, password: string) {
     this.fireauth.createUserWithEmailAndPassword(email, password).then(
       (res) => {
